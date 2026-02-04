@@ -1,147 +1,144 @@
-# health-agent-v1
+# Health Coach Agent 🏋️
 
-A new Agentuity project created with `agentuity create`.
+A personal AI health coach that integrates with **Slack** and **WHOOP** to track your fitness, log workouts, and provide AI-powered coaching advice.
 
-## What You Get
+## Features
 
-A fully configured Agentuity project with:
+- **WHOOP Integration** — Fetches your real-time recovery score, HRV, sleep metrics, and daily strain
+- **Slack Bot** — Chat with your coach via DMs or @mentions in channels
+- **Workout Logging** — Track workouts with activity type, duration, and notes
+- **Motivational Reminders** — Scheduled nudges for movement breaks, hydration, and micro-workouts
+- **AI-Powered Advice** — GPT-4o-mini analyzes your WHOOP data to give personalized training recommendations
 
-- ✅ **TypeScript** - Full type safety out of the box
-- ✅ **Bun runtime** - Fast JavaScript runtime and package manager
-- ✅ **Hot reload** - Development server with auto-rebuild
-- ✅ **Example agent** - Sample "hello" agent to get started
-- ✅ **React frontend** - Pre-configured web interface
-- ✅ **API routes** - Example API endpoints
-- ✅ **Type checking** - TypeScript configuration ready to go
+## Tech Stack
+
+- **Runtime**: [Bun](https://bun.sh/) + [Agentuity](https://agentuity.dev)
+- **AI**: [OpenAI GPT-4o-mini](https://openai.com/) via Vercel AI SDK
+- **Database**: [Neon PostgreSQL](https://neon.tech/) with [Drizzle ORM](https://orm.drizzle.team/)
+- **Integrations**: [Slack Web API](https://api.slack.com/), [WHOOP API](https://developer.whoop.com/)
+- **Frontend**: React 19 + Tailwind CSS
 
 ## Project Structure
 
 ```
-my-app/
+health-agent-v1/
 ├── src/
-│   ├── agent/            # Agent definitions
-│   │   └── hello/
-│   │       ├── agent.ts  # Example agent
-│   │       └── index.ts  # Default exports
-│   ├── api/              # API definitions
-│   │   └── index.ts      # Example routes
-│   └── web/              # React web application
-│       ├── public/       # Static assets
-│       ├── App.tsx       # Main React component
-│       ├── frontend.tsx  # Entry point
-│       └── index.html    # HTML template
-├── AGENTS.md             # Agent guidelines
-├── app.ts                # Application entry point
-├── tsconfig.json         # TypeScript configuration
-├── package.json          # Dependencies and scripts
-└── README.md             # Project documentation
+│   ├── agent/coach/          # Health coach agent
+│   │   ├── index.ts          # Agent definition & handler
+│   │   ├── generate_response.ts  # LLM response generation
+│   │   ├── tools.ts          # AI tools (WHOOP fetch, workout log)
+│   │   ├── api/
+│   │   │   └── reminder.ts   # Motivational reminder logic
+│   │   ├── db/
+│   │   │   ├── schema.ts     # Drizzle schema (workouts table)
+│   │   │   ├── connection.ts # Neon DB connection
+│   │   │   └── ops.ts        # Database operations
+│   │   └── lib/
+│   │       ├── slack_utils.ts    # Slack client & verification
+│   │       ├── whoop_utils.ts    # WHOOP API helpers
+│   │       ├── handle_messages.ts    # DM handler
+│   │       └── handle_app_mention.ts # @mention handler
+│   ├── api/
+│   │   └── index.ts          # API routes
+│   └── web/                  # React frontend
+├── agentuity.json            # Agentuity config
+├── package.json
+└── tsconfig.json
 ```
 
-## Available Commands
+## API Endpoints
 
-After creating your project, you can run:
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/coach` | Welcome message & endpoint list |
+| `POST` | `/api/coach` | Send a direct message to the coach |
+| `POST` | `/api/coach/slack` | Slack Events API webhook |
+| `GET/POST` | `/api/coach/reminder` | Trigger a motivational reminder |
 
-### Development
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Slack
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
+AUTHORIZED_USER_ID=U...        # Your Slack user ID (optional, restricts access)
+
+# WHOOP
+WHOOP_ACCESS_TOKEN=...
+WHOOP_USER_ID=...
+
+# Database (Neon PostgreSQL)
+DATABASE_URL=postgresql://...
+```
+
+## Commands
 
 ```bash
+# Install dependencies
+bun install
+
+# Start development server
 bun dev
-```
 
-Starts the development server at `http://localhost:3500`
-
-### Build
-
-```bash
-bun build
-```
-
-Compiles your application into the `.agentuity/` directory
-
-### Type Check
-
-```bash
+# Type check
 bun typecheck
-```
 
-Runs TypeScript type checking
+# Build for production
+bun run build
 
-### Deploy to Agentuity
-
-```bash
+# Deploy to Agentuity cloud
 bun run deploy
+
+# Database migrations
+bun run db:generate   # Generate migrations
+bun run db:push       # Push schema to database
 ```
 
-Deploys your application to the Agentuity cloud
+## Usage Examples
 
-## Next Steps
+### Chat with your coach in Slack
 
-After creating your project:
+> **You:** How's my recovery today?  
+> **Coach:** Your recovery is at 78% 💚 with an HRV of 45ms. You're good to push today — maybe a strength session or interval run!
 
-1. **Customize the example agent** - Edit `src/agent/hello/agent.ts`
-2. **Add new agents** - Create new folders in `src/agent/`
-3. **Add new APIs** - Create new folders in `src/api/`
-4. **Add Web files** - Create new routes in `src/web/`
-5. **Customize the UI** - Edit `src/web/app.tsx`
-6. **Configure your app** - Modify `app.ts` to add middleware, configure services, etc.
+> **You:** Log workout: 30 min cycling  
+> **Coach:** ✅ Logged! 30 min of cycling — nice work! 🚴
 
-## Creating Custom Agents
+> **You:** What were my last workouts?  
+> **Coach:** Here are your last 3 workouts:  
+> • Cycling — 30 min (on 2/3/2026)  
+> • Running — 45 min (on 2/1/2026)  
+> • Strength — 60 min (on 1/30/2026)
 
-Create a new agent by adding a folder in `src/agent/`:
+### Motivational Reminders
 
-```typescript
-// src/agent/my-agent/agent.ts
-import { createAgent } from '@agentuity/runtime';
-import { s } from '@agentuity/schema';
+The `/api/coach/reminder` endpoint sends random motivational nudges:
+- ⏰ Stand up and stretch!
+- 🚶‍♂️ Quick 5-min walk break
+- 💧 8 oz of water right now
+- 🧘 60-second box-breathing
+- 🔥 20 desk push-ups?
+- 🧎‍♂️ 30-sec plank—core switch-on!
 
-const agent = createAgent({
-	description: 'My amazing agent',
-	schema: {
-		input: s.object({
-			name: s.string(),
-		}),
-		output: s.string(),
-	},
-	handler: async (_ctx, { name }) => {
-		return `Hello, ${name}! This is my custom agent.`;
-	},
-});
+## Slack App Setup
 
-export default agent;
-```
+1. Create a new Slack app at [api.slack.com/apps](https://api.slack.com/apps)
+2. Enable **Event Subscriptions** and set the request URL to `https://your-deployment.agentuity.run/api/coach/slack`
+3. Subscribe to bot events: `app_mention`, `message.im`
+4. Enable **OAuth & Permissions** with scopes: `chat:write`, `im:history`, `app_mentions:read`
+5. Install the app to your workspace and copy the Bot Token
 
-## Adding API Routes
+## WHOOP API Setup
 
-Create custom routes in `src/api/`:
+1. Create a developer account at [developer.whoop.com](https://developer.whoop.com/)
+2. Create an OAuth app and authorize access to your account
+3. Generate an access token with scopes: `read:recovery`, `read:sleep`, `read:cycles`
 
-```typescript
-// src/api/my-agent/route.ts
-import { createRouter } from '@agentuity/runtime';
-import myAgent from './agent';
+## License
 
-const router = createRouter();
-
-router.get('/', async (c) => {
-	const result = await myAgent.run({ message: 'Hello!' });
-	return c.json(result);
-});
-
-router.post('/', myAgent.validator(), async (c) => {
-	const data = c.req.valid('json');
-	const result = await myAgent.run(data);
-	return c.json(result);
-});
-
-export default router;
-```
-
-## Learn More
-
-- [Agentuity Documentation](https://agentuity.dev)
-- [Bun Documentation](https://bun.sh/docs)
-- [Hono Documentation](https://hono.dev/)
-- [Zod Documentation](https://zod.dev/)
-
-## Requirements
-
-- [Bun](https://bun.sh/) v1.0 or higher
-- TypeScript 5+
+Apache-2.0
